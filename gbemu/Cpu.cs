@@ -3,78 +3,108 @@ namespace gbemu;
 public class Cpu
 {
     private Gameboy _gameboy;
-    internal Registers _registers;
 
-    internal class Registers
+    private byte A;
+    private byte B;
+    private byte C;
+    private byte D;
+    private byte E;
+    private byte H;
+    private byte L;
+    private byte Flags;
+    private ushort SP; // Stack Pointer
+    private ushort PC; // Program Counter
+
+    private ushort AF
     {
-        byte A;
-        byte B;
-        byte C;
-        byte D;
-        byte E;
-        byte H;
-        byte L;
-        byte Flags;
-        ushort SP; // Stack Pointer
-        internal ushort PC; // Program Counter
-        
-        ushort AF
+        get => (ushort)((ushort)(A << 8) | Flags);
+        set
         {
-            get => (ushort)((ushort)(A << 4) ^ Flags);
-            set {
-                A = (byte)(value >> 4);
-                Flags = (byte)(value & 0xF);
-            }
+            A = (byte)(value >> 8);
+            Flags = (byte)(value & 0xFF);
         }
-        
-        ushort BC
+    }
+
+    private ushort BC
+    {
+        get => (ushort)((ushort)(B << 8) | C);
+        set
         {
-            get => (ushort)((ushort)(B << 4) ^ C);
-            set {
-                B = (byte)(value >> 4);
-                C = (byte)(value & 0xF);
-            }
+            B = (byte)(value >> 8);
+            C = (byte)(value & 0xFF);
         }
-        
-        ushort DE
+    }
+
+    private ushort DE
+    {
+        get => (ushort)((ushort)(D << 8) | E);
+        set
         {
-            get => (ushort)((ushort)(D << 4) ^ E);
-            set {
-                D = (byte)(value >> 4);
-                E = (byte)(value & 0xF);
-            }
+            D = (byte)(value >> 8);
+            E = (byte)(value & 0xFF);
         }
-        
-        ushort HL
+    }
+
+    private ushort HL
+    {
+        get => (ushort)((ushort)(H << 8) | L);
+        set
         {
-            get => (ushort)((ushort)(H << 4) ^ L);
-            set {
-                H = (byte)(value >> 4);
-                L = (byte)(value & 0xF);
-            }
+            H = (byte)(value >> 8);
+            L = (byte)(value & 0xFF);
         }
     }
 
     public Cpu(Gameboy gameboy)
     {
-        this._gameboy = gameboy;
-        this._registers = new Registers();
+        _gameboy = gameboy;
+        PC = 0x0100;
     }
 
-    internal void run()
+public void run()
     {
         while (true)
         {
-            switch (_gameboy._memory.Get(_registers.PC))
+            byte[] lookahead = _gameboy._memory.GetByteArray(PC, 3);
+
+            switch (lookahead[0])
             {
+                case 0x00:
+                    PC += 0x1;
+                    break;
+                case 0x05:
+                    B--;
+                    Flags &= 0b0001;
+                    //Flags |= (byte)(B == 0x00 ? 0b1100 : 0b0100);
+                    PC += 0x1;
+                    break;
+                case 0x06:
+                    B = lookahead[1];
+                    PC += 0x2;
+                    break;
+                case 0x0E:
+                    C = lookahead[1];
+                    PC += 0x2;
+                    break;
+                case 0x21:
+                    H = lookahead[2];
+                    L = lookahead[1];
+                    PC += 0x3;
+                    break;
+                case 0x32:
+                    _gameboy._memory.Set(HL, A);
+                    PC += 0x01;
+                    break;
+                case 0xAF:
+                    Flags = (byte)(A == 0x0000 ? 0b1000 : 0b0000);
+                    PC += 0x1;
+                    break;
                 case 0xC3:
-                    byte lo = _gameboy._memory.Get((ushort)(_registers.PC+0x0008));
-                    byte hi = _gameboy._memory.Get((ushort)(_registers.PC+0x0016));
-                    _registers.PC = (ushort)(hi << 4 | lo);
+                    PC = (ushort)(lookahead[2] << 8 | lookahead[1]);
                     break;
                 default:
                     throw new NotImplementedException(
-                        $"OP-Code {_gameboy._memory.Get(_registers.PC).ToString("x")} is not implemented");
+                        $"OP-Code {lookahead[0]:x} {lookahead[1]:x} {lookahead[2]:x} is not implemented");
                     break;
             }
         }

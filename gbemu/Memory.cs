@@ -26,18 +26,27 @@ public class Memory
         rom.CopyTo(_memory, 0x0000);
     }
 
-    public byte Get(ushort offset)
+    public byte GetByte(ushort offset)
     {
         return _memory[offset];
     }
     
-    public byte[] Get(ushort offset, int bytes)
+    public ushort GetUInt16(ushort offset)
     {
-        byte[] ret = new byte[bytes];
-        for(int i = 0; i < bytes; i++)
-        {
-            
-        }
-        return ret;
+        byte lo = _memory[offset];
+        byte hi = _memory[offset+0x0001];
+        
+        return (ushort)(hi << 8 | lo);
+    }
+    
+    public byte[] GetByteArray(ushort offset, ushort length)
+    {
+        return _memory[offset..(offset + length)];
+    }
+
+    public void Set(ushort offset, ushort value)
+    {
+        _memory[offset] = (byte)(value & 0xFF);
+        _memory[offset + 1] = (byte)(value >> 8);
     }
 }

@@ -7,7 +7,7 @@ public class Gameboy
     public Gameboy()
     {
         this._cpu = new Cpu(this);
-        this._memory = new Memory(this);
+        this._memory = new Memory(this, bootRomActive: false);
     }
 
     public void loadRom(byte[] rom)

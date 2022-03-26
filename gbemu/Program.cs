@@ -4,7 +4,7 @@ using gbemu;
 
 Gameboy gameboy = new Gameboy();
 
-byte[] rom = File.ReadAllBytes("/home/merlin/Projects/gbemu/gbemu/gbemu/tetris.gb");
+byte[] rom = File.ReadAllBytes("tetris.gb");
 
 
 
