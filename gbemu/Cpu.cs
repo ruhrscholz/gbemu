@@ -74,17 +74,32 @@ public void run()
                     break;
                 case 0x05:
                     B--;
-                    Flags &= 0b0001;
-                    //Flags |= (byte)(B == 0x00 ? 0b1100 : 0b0100);
+                    Flags &= 0b0001_0000;
+                    Flags |= (byte)(B == 0x00 ? 0b1100_0000 : 0b0100_0000); // TODO H Flag
                     PC += 0x1;
                     break;
                 case 0x06:
                     B = lookahead[1];
                     PC += 0x2;
                     break;
+                case 0x0D:
+                    C--;
+                    Flags &= 0b0001_0000;
+                    Flags |= (byte)(B == 0x00 ? 0b1100_0000 : 0b0100_0000); // TODO H Flag
+                    PC += 0x1;
+                    break;
                 case 0x0E:
                     C = lookahead[1];
                     PC += 0x2;
+                    break;
+                case 0x0F:
+                    Flags = (byte)((A & 0b0000_0001) == 0b0000_0001 ? 0b0001_0000 : 0b0000_0000);
+                    A >>= 1;
+                    Flags |= (byte)(A == 0xFF ? 0b1000_0000 : 0b0000_0000);
+                    PC += 0x1;
+                    break;
+                case 0x20:
+                    PC += (ushort)(Flags >> 7 == 0b0000001 ? lookahead[1] : 0x2);
                     break;
                 case 0x21:
                     H = lookahead[2];
@@ -95,6 +110,10 @@ public void run()
                     _gameboy._memory.Set(HL, A);
                     PC += 0x01;
                     break;
+                case 0x3E:
+                    A = lookahead[1];
+                    PC += 0x2;
+                    break;
                 case 0xAF:
                     Flags = (byte)(A == 0x0000 ? 0b1000 : 0b0000);
                     PC += 0x1;
@@ -102,11 +121,30 @@ public void run()
                 case 0xC3:
                     PC = (ushort)(lookahead[2] << 8 | lookahead[1]);
                     break;
+                case 0xE0:
+                    _gameboy._memory.Set((ushort)(0xFF00 + lookahead[1]), A);
+                    PC += 0x1;
+                    break;
+                case 0xF2:
+                    A = _gameboy._memory.GetByte((ushort)(0xFF00 + C));
+                    PC += 0x1;
+                    break;
+                case 0xF3:
+                    // TODO Disable interrupts
+                    PC += 0x1;
+                    break;
+                case 0xFB:
+                    // TODO Enable interrupts
+                    PC += 0x1;
+                    break;
                 default:
                     throw new NotImplementedException(
                         $"OP-Code {lookahead[0]:x} {lookahead[1]:x} {lookahead[2]:x} is not implemented");
                     break;
+                
             }
+            Console.WriteLine(lookahead[0]);
+
         }
             
     }

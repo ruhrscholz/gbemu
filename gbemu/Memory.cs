@@ -44,6 +44,11 @@ public class Memory
         return _memory[offset..(offset + length)];
     }
 
+    public void Set(ushort offset, byte value)
+    {
+        _memory[offset] = value;
+    }
+    
     public void Set(ushort offset, ushort value)
     {
         _memory[offset] = (byte)(value & 0xFF);
