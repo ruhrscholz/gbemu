@@ -5,8 +5,10 @@ namespace gbemu;
 public class Memory
 {
     private Gameboy _gameboy;
-    private byte[] _memory = new byte[0xFFFF];
+    private byte[] _rom = new byte[0x8000];
     private byte[] _bootRom = new byte[0x0100];
+    private byte[] _wram = new byte[0x2000];
+    private byte[] _zram = new byte[0x0080];
     private bool _bootRomActive;
     
     public Memory(Gameboy gameboy, bool bootRomActive = true)
@@ -22,36 +24,59 @@ public class Memory
         {
             throw new NotImplementedException("ROMs with switched banks are not supported");
         }
-        
-        rom.CopyTo(_memory, 0x0000);
+
+        _rom = rom;
     }
 
     public byte GetByte(ushort offset)
     {
-        return _memory[offset];
+        return offset switch
+        {
+            < 0x0100 => _bootRomActive ? _bootRom[offset] : _rom[offset],
+            < 0x3000 => _rom[offset],
+            >= 0xC000 and < 0xE000 => _wram[offset - 0xC000],
+            < 0xE000 and < 0xFE00 => _wram[offset - 0xE000],
+            >= 0xFF80 => _zram[offset - 0xFE00],
+            _ => throw new NotImplementedException($"Memory area for address {offset:x} not yet implemented")
+        };
     }
     
-    public ushort GetUInt16(ushort offset)
-    {
-        byte lo = _memory[offset];
-        byte hi = _memory[offset+0x0001];
-        
-        return (ushort)(hi << 8 | lo);
-    }
     
     public byte[] GetByteArray(ushort offset, ushort length)
     {
-        return _memory[offset..(offset + length)];
+        byte[] ret = new byte[length];
+        for (int i = 0; i < length; i++)
+        {
+            ret[i] = GetByte((ushort)(offset + i));
+        }
+
+        return ret;
     }
 
     public void Set(ushort offset, byte value)
     {
-        _memory[offset] = value;
+        switch (offset)
+        {
+            case < 0x3000:
+                throw new Exception("Cannot write to ROM");
+            case >= 0xC000 and < 0xE000:
+                _wram[offset - 0xC000] = value;
+                break;
+            case >= 0xE000 and < 0xFE00:
+                _wram[offset - 0xE000] = value;
+                break;
+            case >= 0xFF80:
+                _zram[offset - 0xFE00] = value;
+                break;
+            default:
+                throw new NotImplementedException($"Memory area for address {offset:x} not yet implemented");
+        }
     }
     
     public void Set(ushort offset, ushort value)
     {
-        _memory[offset] = (byte)(value & 0xFF);
-        _memory[offset + 1] = (byte)(value >> 8);
+        
+        Set(offset, (byte)(value & 0xFF));
+        Set((ushort)(offset + 1), (byte)(value >> 8));
     }
 }

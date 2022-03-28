@@ -73,61 +73,68 @@ public void run()
                     PC += 0x1;
                     break;
                 case 0x05:
-                    B--;
-                    Flags &= 0b0001_0000;
-                    Flags |= (byte)(B == 0x00 ? 0b1100_0000 : 0b0100_0000); // TODO H Flag
                     PC += 0x1;
+                    Flags &= 1<<4; // Static flags
+                    Flags |= (byte)((B & 1<<4) != (B-1 & 1<<4) ? 1<<5 : 0); // H flag and dec
+                    B--;
+                    Flags |= (byte)(B == 0x00 ? 1<<7 : 0); // Z flag
                     break;
                 case 0x06:
-                    B = lookahead[1];
                     PC += 0x2;
+                    B = lookahead[1];
                     break;
                 case 0x0D:
-                    C--;
-                    Flags &= 0b0001_0000;
-                    Flags |= (byte)(B == 0x00 ? 0b1100_0000 : 0b0100_0000); // TODO H Flag
                     PC += 0x1;
+                    Flags &= 1<<4; // Static flags
+                    Flags |= (byte)((C & 1<<4) != (C-1 & 1<<4) ? 1<<5 : 0); // H flag and dec
+                    C--;
+                    Flags |= (byte)(C == 0x00 ? 1<<7 : 0); // Z flag
                     break;
                 case 0x0E:
                     C = lookahead[1];
                     PC += 0x2;
                     break;
                 case 0x0F:
+                    PC += 0x1;
                     Flags = (byte)((A & 0b0000_0001) == 0b0000_0001 ? 0b0001_0000 : 0b0000_0000);
                     A >>= 1;
                     Flags |= (byte)(A == 0xFF ? 0b1000_0000 : 0b0000_0000);
-                    PC += 0x1;
                     break;
                 case 0x20:
-                    PC += (ushort)(Flags >> 7 == 0b0000001 ? lookahead[1] : 0x2);
+                    PC += 0x2;
+                    PC += (ushort)((Flags & 1<<7) == 0 ? (sbyte)lookahead[1]-0x01 : 0x00);
                     break;
                 case 0x21:
+                    PC += 0x3;
                     H = lookahead[2];
                     L = lookahead[1];
-                    PC += 0x3;
                     break;
                 case 0x32:
-                    _gameboy._memory.Set(HL, A);
                     PC += 0x01;
+                    _gameboy._memory.Set(HL--, A);
                     break;
                 case 0x3E:
-                    A = lookahead[1];
                     PC += 0x2;
+                    A = lookahead[1];
                     break;
                 case 0xAF:
-                    Flags = (byte)(A == 0x0000 ? 0b1000 : 0b0000);
                     PC += 0x1;
+                    Flags = (byte)(A == 0x0000 ? 0b1000 : 0b0000);
                     break;
                 case 0xC3:
                     PC = (ushort)(lookahead[2] << 8 | lookahead[1]);
                     break;
                 case 0xE0:
+                    PC += 0x2;
                     _gameboy._memory.Set((ushort)(0xFF00 + lookahead[1]), A);
-                    PC += 0x1;
+                    break;
+                case 0xF0:
+                    PC += 0x2;
+                    A = _gameboy._memory.GetByte((ushort)(0xFF00 + lookahead[1]));
                     break;
                 case 0xF2:
-                    A = _gameboy._memory.GetByte((ushort)(0xFF00 + C));
                     PC += 0x1;
+                    A = _gameboy._memory.GetByte((ushort)(0xFF00 + C));
                     break;
                 case 0xF3:
                     // TODO Disable interrupts
@@ -137,13 +144,20 @@ public void run()
                     // TODO Enable interrupts
                     PC += 0x1;
                     break;
+                case 0xFE:
+                    PC += 0x2;
+                    Flags = 0b0100_0000;
+                    Flags |= (byte)(A == lookahead[1] ? 1 << 7 : 0); // Z flag
+                    Flags |= (byte)((A & 1<<4) != ((A - lookahead[1]) & 1<<4) ? 1 << 5 : 0);  // H flag
+                    Flags |= (byte)(A <  lookahead[1] ? 1 << 4 : 0); // C Flag
+                    break;
                 default:
                     throw new NotImplementedException(
                         $"OP-Code {lookahead[0]:x} {lookahead[1]:x} {lookahead[2]:x} is not implemented");
                     break;
                 
             }
-            Console.WriteLine(lookahead[0]);
+            Console.WriteLine($"{lookahead[0]:x}");
 
         }
             
