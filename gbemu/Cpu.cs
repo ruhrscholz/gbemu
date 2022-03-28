@@ -63,10 +63,8 @@ public class Cpu
         PC = 0x0100;
     }
 
-public void run()
+public void iterate()
     {
-        while (true)
-        {
             byte[] lookahead = _gameboy._memory.ReadByteArray(PC, 3);
 
             switch (lookahead[0])
@@ -163,5 +161,4 @@ public void run()
 
         }
             
-    }
 }

@@ -8,4 +8,10 @@
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Silk.NET.Input.Sdl" Version="2.14.0" />
+      <PackageReference Include="Silk.NET.OpenCL" Version="2.14.0" />
+      <PackageReference Include="Silk.NET.Windowing.Sdl" Version="2.14.0" />
+    </ItemGroup>
+
 </Project>

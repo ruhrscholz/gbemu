@@ -17,8 +17,8 @@ public class Gameboy
         this._memory.loadRom(rom);
     }
 
-    public void start()
+    public void iterate()
     {
-        this._cpu.run();
+        this._cpu.iterate();
     }
 }
