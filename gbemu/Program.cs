@@ -2,6 +2,10 @@
 
 using gbemu;
 
+
+mainWindow = new Window();
+mainWindow.Title = "Canvas Sample";
+
 Gameboy gameboy = new Gameboy();
 
 byte[] rom = File.ReadAllBytes("tetris.gb");

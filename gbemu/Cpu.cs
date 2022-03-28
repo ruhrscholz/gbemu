@@ -14,6 +14,7 @@ public class Cpu
     private byte Flags;
     private ushort SP; // Stack Pointer
     private ushort PC; // Program Counter
+    private bool _interruptEnabled;
 
     private ushort AF
     {
@@ -58,6 +59,7 @@ public class Cpu
     public Cpu(Gameboy gameboy)
     {
         _gameboy = gameboy;
+        _interruptEnabled = true;
         PC = 0x0100;
     }
 
@@ -65,7 +67,7 @@ public void run()
     {
         while (true)
         {
-            byte[] lookahead = _gameboy._memory.GetByteArray(PC, 3);
+            byte[] lookahead = _gameboy._memory.ReadByteArray(PC, 3);
 
             switch (lookahead[0])
             {
@@ -111,7 +113,7 @@ public void run()
                     break;
                 case 0x32:
                     PC += 0x01;
-                    _gameboy._memory.Set(HL--, A);
+                    _gameboy._memory.WriteByte(HL--, A);
                     break;
                 case 0x3E:
                     PC += 0x2;
@@ -126,22 +128,22 @@ public void run()
                     break;
                 case 0xE0:
                     PC += 0x2;
-                    _gameboy._memory.Set((ushort)(0xFF00 + lookahead[1]), A);
+                    _gameboy._memory.WriteByte((ushort)(0xFF00 + lookahead[1]), A);
                     break;
                 case 0xF0:
                     PC += 0x2;
-                    A = _gameboy._memory.GetByte((ushort)(0xFF00 + lookahead[1]));
+                    A = _gameboy._memory.ReadByte((ushort)(0xFF00 + lookahead[1]));
                     break;
                 case 0xF2:
                     PC += 0x1;
-                    A = _gameboy._memory.GetByte((ushort)(0xFF00 + C));
+                    A = _gameboy._memory.ReadByte((ushort)(0xFF00 + C));
                     break;
                 case 0xF3:
-                    // TODO Disable interrupts
+                    _interruptEnabled = false;
                     PC += 0x1;
                     break;
                 case 0xFB:
-                    // TODO Enable interrupts
+                    _interruptEnabled = true;
                     PC += 0x1;
                     break;
                 case 0xFE:

@@ -28,7 +28,7 @@ public class Memory
         _rom = rom;
     }
 
-    public byte GetByte(ushort offset)
+    public byte ReadByte(ushort offset)
     {
         return offset switch
         {
@@ -36,24 +36,26 @@ public class Memory
             < 0x3000 => _rom[offset],
             >= 0xC000 and < 0xE000 => _wram[offset - 0xC000],
             < 0xE000 and < 0xFE00 => _wram[offset - 0xE000],
-            >= 0xFF80 => _zram[offset - 0xFE00],
-            _ => throw new NotImplementedException($"Memory area for address {offset:x} not yet implemented")
+            >= 0xFF40 and < 0xFF80 => _gameboy._gpu.ReadByte((ushort)(offset - 0xFF40)),
+            >= 0xFF80 => _zram[offset - 0xFF80],
+            //_ => throw new NotImplementedException($"Memory area for address {offset:x} not yet implemented (attempted read)")
+            _ => 0
         };
     }
     
     
-    public byte[] GetByteArray(ushort offset, ushort length)
+    public byte[] ReadByteArray(ushort offset, ushort length)
     {
         byte[] ret = new byte[length];
         for (int i = 0; i < length; i++)
         {
-            ret[i] = GetByte((ushort)(offset + i));
+            ret[i] = ReadByte((ushort)(offset + i));
         }
 
         return ret;
     }
 
-    public void Set(ushort offset, byte value)
+    public void WriteByte(ushort offset, byte value)
     {
         switch (offset)
         {
@@ -65,18 +67,23 @@ public class Memory
             case >= 0xE000 and < 0xFE00:
                 _wram[offset - 0xE000] = value;
                 break;
+            case >= 0xFF40 and < 0xFF80:
+                _gameboy._gpu.WriteByte((ushort)(offset - 0xFF40), value);
+                break;
             case >= 0xFF80:
-                _zram[offset - 0xFE00] = value;
+                _zram[offset - 0xFF80] = value;
                 break;
             default:
-                throw new NotImplementedException($"Memory area for address {offset:x} not yet implemented");
+                Console.WriteLine($"Memory area for address {offset:x} not yet implemented (attempted write)");
+                Console.WriteLine("Trying to continue anyways...");
+                break;
         }
     }
     
-    public void Set(ushort offset, ushort value)
+    public void WriteWord(ushort offset, ushort value)
     {
         
-        Set(offset, (byte)(value & 0xFF));
-        Set((ushort)(offset + 1), (byte)(value >> 8));
+        WriteByte(offset, (byte)(value & 0xFF));
+        WriteByte((ushort)(offset + 1), (byte)(value >> 8));
     }
 }

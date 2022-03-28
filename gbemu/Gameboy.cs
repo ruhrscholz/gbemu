@@ -4,10 +4,12 @@ public class Gameboy
 {
     internal Cpu _cpu;
     internal Memory _memory;
+    internal Gpu _gpu;
     public Gameboy()
     {
-        this._cpu = new Cpu(this);
-        this._memory = new Memory(this, bootRomActive: false);
+        _cpu = new Cpu(this);
+        _memory = new Memory(this, bootRomActive: false);
+        _gpu = new Gpu(this);
     }
 
     public void loadRom(byte[] rom)
