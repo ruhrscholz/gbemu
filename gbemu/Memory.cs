@@ -67,6 +67,9 @@ public class Memory
             case >= 0xE000 and < 0xFE00:
                 _wram[offset - 0xE000] = value;
                 break;
+            case >= 0xFF0F and <= 0xFF0F:
+                _gameboy._cpu.interrupts = value;
+                break;
             case >= 0xFF40 and < 0xFF80:
                 _gameboy._gpu.WriteByte((ushort)(offset - 0xFF40), value);
                 break;

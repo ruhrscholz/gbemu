@@ -15,6 +15,7 @@ public class Cpu
     private byte Flags;
     private ushort SP; // Stack Pointer
     private ushort PC; // Program Counter
+    internal byte interrupts;
     private bool _interruptEnabled;
 
     private ushort AF
@@ -65,7 +66,16 @@ public class Cpu
         PC = 0x0100;
     }
 
-public int step()
+    public int step()
+    {
+        int t = op();
+        if (interrupts != 0x00)
+        {
+            throw new NotImplementedException("Interrupt encountered");
+        }
+        return t;
+    }
+    public int op()
     {
         byte[] lookahead = _gameboy._memory.ReadByteArray(PC, 3);
 
@@ -105,12 +115,13 @@ public int step()
                 Flags |= (byte)(A == 0xFF ? 0b1000_0000 : 0b0000_0000);
                 return 4;
             case 0x20:
-                PC += 0x2;
                 if ((Flags & 1 << 7) == 0)
                 {
-                    PC += (ushort)((sbyte)lookahead[1]-0x01);
+                    PC += (ushort)((sbyte)lookahead[1]+0x1);
                     return 12;
-                } else {
+                } else
+                {
+                    PC += 0x2;
                     return 8;
                 }
             case 0x21:
