@@ -19,7 +19,8 @@ static class Program
         
         var options = WindowOptions.Default;
         options.Size = new Vector2D<int>(160, 144);
-        options.UpdatesPerSecond = 4.19*Math.Pow(10, 6);
+        options.VSync = false;
+        //options.UpdatesPerSecond = 4.19*Math.Pow(10, 6);
 
         _window = Window.Create(options);
         
@@ -49,7 +50,7 @@ static class Program
 
     private static void OnUpdate(double obj)
     {
-        _gameboy.iterate();
+        _gameboy.step();
     }
 
     private static void KeyDown(IKeyboard arg1, Key arg2, int arg3)
