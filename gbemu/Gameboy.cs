@@ -10,7 +10,7 @@ public class Gameboy
     public Gameboy()
     {
         _cpu = new Cpu(this);
-        _memory = new Memory(this, bootRomActive: false);
+        _memory = new Memory(this, bootRomActive: true);
         _gpu = new Gpu(this);
         Array.Fill(_framebuffer, (byte)0);
     }

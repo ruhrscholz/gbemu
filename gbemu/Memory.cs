@@ -8,19 +8,20 @@ public class Memory
     private byte[] _rom = new byte[0x8000];
     private byte[] _bootRom = new byte[0x0100];
     private byte[] _wram = new byte[0x2000];
+    private byte[] _vram = new byte[0x4000];
     private byte[] _zram = new byte[0x0080];
-    private bool _bootRomActive;
+    internal bool _bootRomActive;
     
     public Memory(Gameboy gameboy, bool bootRomActive = true)
     {
         _gameboy = gameboy;
-        File.ReadAllBytes("./dmg0.bin").CopyTo(_bootRom, 0);
+        _bootRom = File.ReadAllBytes("./dmg0.bin");
         _bootRomActive = bootRomActive;
     }
 
     public void loadRom(byte[] rom)
     {
-        if (rom.Length != 0x8000)
+        if (rom[0x0147] != 0x00)
         {
             throw new NotImplementedException("ROMs with switched banks are not supported");
         }
@@ -33,9 +34,10 @@ public class Memory
         return offset switch
         {
             < 0x0100 => _bootRomActive ? _bootRom[offset] : _rom[offset],
-            < 0x3000 => _rom[offset],
+            < 0x4000 => _rom[offset],
+            >= 0x8000 and < 0xA000 => _vram[offset - 0x8000],
             >= 0xC000 and < 0xE000 => _wram[offset - 0xC000],
-            < 0xE000 and < 0xFE00 => _wram[offset - 0xE000],
+            >= 0xE000 and < 0xFE00 => _wram[offset - 0xE000],
             >= 0xFF40 and < 0xFF80 => _gameboy._gpu.ReadByte((ushort)(offset - 0xFF40)),
             >= 0xFF80 => _zram[offset - 0xFF80],
             //_ => throw new NotImplementedException($"Memory area for address {offset:x} not yet implemented (attempted read)")
@@ -59,8 +61,11 @@ public class Memory
     {
         switch (offset)
         {
-            case < 0x3000:
+            case < 0x8000:
                 throw new Exception("Cannot write to ROM");
+            case >= 0x8000 and < 0xA000:
+                _vram[offset - 0x8000] = value;
+                break;
             case >= 0xC000 and < 0xE000:
                 _wram[offset - 0xC000] = value;
                 break;

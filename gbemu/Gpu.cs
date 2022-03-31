@@ -51,7 +51,8 @@ public class Gpu
                 _scx = value;
                 break;
             default:
-                throw new NotImplementedException($"Attempted write to GPU address {offset:x}");
+                Console.WriteLine($"Memory area for GPU address {offset:x} not yet implemented (attempted write). Trying to continue anyways...");
+                break;
         }
     }
 

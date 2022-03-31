@@ -20,7 +20,7 @@ static class Program
         var options = WindowOptions.Default;
         options.Size = new Vector2D<int>(160, 144);
         options.VSync = false;
-        //options.UpdatesPerSecond = 4.19*Math.Pow(10, 6);
+        options.UpdatesPerSecond = 1 << 22;
 
         _window = Window.Create(options);
         
